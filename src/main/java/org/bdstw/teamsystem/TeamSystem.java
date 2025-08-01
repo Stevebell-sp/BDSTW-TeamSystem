@@ -38,10 +38,12 @@ public class TeamSystem {
         LOGGER.info(" BDSTW TeamSystem 模組已成功載入！");
         LOGGER.info(" 浩浩大笨笨~~~！！！  by小誠");
         LOGGER.info("========================================");
-        LOGGER.info(" 正在建立預設隊伍...");
-        // 修正：不再需要傳遞任何參數
-        TeamManager.createPredefinedTeams();
-        LOGGER.info(" 預設隊伍建立完成！");
+
+        // 修正：呼叫一個新的方法來重置並初始化所有隊伍相關數據
+        LOGGER.info(" 正在重設並初始化隊伍系統...");
+        TeamManager.resetAndInitializeData(event.getServer());
+        LOGGER.info(" 隊伍系統準備就緒！");
+
         LOGGER.info("========================================");
     }
 }

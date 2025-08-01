@@ -12,16 +12,15 @@ import net.minecraft.server.level.ServerPlayer;
 import org.bdstw.teamsystem.team.Team;
 import org.bdstw.teamsystem.team.TeamManager;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 
 public class TeamAdminCommand {
 
-    private static final String PREFIX = "commands.bdstw_teamsystem.prefix";
-
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("teamadmin")
-                .requires(source -> source.hasPermission(2)) // 僅限 OP (等級2) 或指令方塊使用
+                .requires(source -> source.hasPermission(2))
                 .then(Commands.literal("create")
                         .then(Commands.argument("team_name", StringArgumentType.greedyString())
                                 .executes(ctx -> createTeam(ctx, null))
@@ -35,10 +34,11 @@ public class TeamAdminCommand {
                                 .then(Commands.argument("team_name", StringArgumentType.greedyString())
                                         .executes(TeamAdminCommand::forceJoin))))
                 .then(Commands.literal("removeplayer")
-                        .then(Commands.argument("player", EntityArgument.player())
+                        .then(Commands.argument("player", EntityArgument.player()) // 註：此處仍為單一玩家
                                 .executes(TeamAdminCommand::removePlayer)))
                 .then(Commands.literal("randomjoin")
-                        .then(Commands.argument("player", EntityArgument.player())
+                        // 修正：將參數從 player 改為 players，並使用 EntityArgument.players()
+                        .then(Commands.argument("players", EntityArgument.players())
                                 .executes(TeamAdminCommand::forceRandomJoin)))
         );
     }
@@ -49,7 +49,7 @@ public class TeamAdminCommand {
             context.getSource().sendFailure(Component.literal("隊伍 '" + teamName + "' 已存在。"));
             return 0;
         }
-        TeamManager.createTeamByAdmin(teamName, password);
+        TeamManager.createTeamByAdmin(teamName, password, context.getSource().getServer());
         context.getSource().sendSuccess(() -> Component.literal("已成功創建隊伍 " + teamName), true);
         return 1;
     }
@@ -60,7 +60,7 @@ public class TeamAdminCommand {
             context.getSource().sendFailure(Component.literal("隊伍 '" + teamName + "' 不存在。"));
             return 0;
         }
-        TeamManager.disbandTeamByName(teamName);
+        TeamManager.disbandTeamByName(teamName, context.getSource().getServer());
         context.getSource().sendSuccess(() -> Component.literal("已成功解散隊伍 " + teamName), true);
         return 1;
     }
@@ -91,8 +91,10 @@ public class TeamAdminCommand {
         return 1;
     }
 
+    // 修正：更新方法以處理多個玩家
     private static int forceRandomJoin(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
-        ServerPlayer target = EntityArgument.getPlayer(context, "player");
+        // 從指令參數中取得多個玩家
+        Collection<ServerPlayer> targets = EntityArgument.getPlayers(context, "players");
         List<String> predefinedTeams = TeamManager.getPredefinedTeamNames();
 
         if (predefinedTeams.isEmpty()) {
@@ -100,16 +102,21 @@ public class TeamAdminCommand {
             return 0;
         }
 
-        String randomTeamName = predefinedTeams.get(new Random().nextInt(predefinedTeams.size()));
-        Team team = TeamManager.getTeam(randomTeamName);
+        Random random = new Random();
+        for (ServerPlayer target : targets) {
+            // 為每個玩家隨機選擇一個隊伍
+            String randomTeamName = predefinedTeams.get(random.nextInt(predefinedTeams.size()));
+            Team team = TeamManager.getTeam(randomTeamName);
 
-        if (team != null) {
-            TeamManager.forceJoinTeam(target, team);
-            context.getSource().sendSuccess(() -> Component.literal("已隨機將 " + target.getName().getString() + " 加入隊伍 " + team.getName()), true);
-        } else {
-            context.getSource().sendFailure(Component.literal("隨機選擇的隊伍 '" + randomTeamName + "' 不存在。"));
+            if (team != null) {
+                TeamManager.forceJoinTeam(target, team);
+            } else {
+                // 這種情況理論上不應發生
+                context.getSource().sendFailure(Component.literal("錯誤：隨機選擇的隊伍 '" + randomTeamName + "' 不存在。"));
+            }
         }
 
-        return 1;
+        context.getSource().sendSuccess(() -> Component.literal("已成功將 " + targets.size() + " 位玩家隨機分配至隊伍。"), true);
+        return targets.size();
     }
 }

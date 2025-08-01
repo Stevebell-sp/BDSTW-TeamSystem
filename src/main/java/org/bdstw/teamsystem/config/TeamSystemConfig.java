@@ -7,6 +7,8 @@ public class TeamSystemConfig {
     public static final ForgeConfigSpec SPEC;
 
     public static final ForgeConfigSpec.IntValue MAX_TEAM_SIZE;
+    // 友軍傷害的設定已被移除，現在由程式碼直接控制
+
     public static final ForgeConfigSpec.IntValue RTP_MIN_RANGE;
     public static final ForgeConfigSpec.IntValue RTP_MAX_RANGE;
     public static final ForgeConfigSpec.IntValue RTP_COOLDOWN;
@@ -18,6 +20,9 @@ public class TeamSystemConfig {
         MAX_TEAM_SIZE = BUILDER
                 .comment("一個隊伍的最大玩家數量")
                 .defineInRange("maxTeamSize", 8, 2, 64);
+
+        // 友軍傷害的設定已被移除
+
         BUILDER.pop();
 
         BUILDER.push("RTP Settings");

@@ -36,5 +36,8 @@
   "commands.bdstw_teamsystem.info.header": "§e--- 隊伍資訊 [%s] ---",
   "commands.bdstw_teamsystem.info.leader": "§b隊長: §f%s",
   "commands.bdstw_teamsystem.info.members": "§b成員:",
-  "commands.bdstw_teamsystem.info.member_entry": "§f - %s"
+  "commands.bdstw_teamsystem.info.member_entry": "§f - %s",
+  "commands.bdstw_teamsystem.admin.team_exists": "§c隊伍 §e%s §c已存在。",
+  "commands.bdstw_teamsystem.admin.create_success": "已成功創建隊伍 §a%s§r。",
+  "commands.bdstw_teamsystem.admin.force_join_success": "已強制將 §a%s §r加入隊伍 §e%s§r。"
 }

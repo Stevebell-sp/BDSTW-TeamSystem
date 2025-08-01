@@ -65,16 +65,15 @@ minecraft {
     }
 }
 
-// 移除 Plasmoverse 的 Maven 倉庫
 repositories {
-    // 這裡可以保留是空的，或是加入其他需要的倉庫
+    //
 }
 
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.20.1-47.3.0'
+    // 修正：確保版本號與 gradle.properties 一致
+    minecraft 'net.minecraftforge:forge:1.20.1-47.3.10'
 
-    // 移除所有 Plasmo Voice 的依賴
 }
 
 jar {

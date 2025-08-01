@@ -1,5 +1,7 @@
 package org.bdstw.teamsystem.team;
 
+import net.minecraft.ChatFormatting;
+
 import javax.annotation.Nullable;
 import java.util.Set;
 import java.util.UUID;
@@ -10,18 +12,24 @@ public class Team {
     private UUID leader;
     private final Set<UUID> members;
     @Nullable
-    private final String password; // null 表示為公開隊伍
+    private final String password;
+    private final ChatFormatting color;
 
-    public Team(String name, UUID leader, @Nullable String password) {
+    public Team(String name, UUID leader, @Nullable String password, ChatFormatting color) {
         this.name = name;
         this.leader = leader;
         this.members = ConcurrentHashMap.newKeySet();
         this.members.add(leader);
         this.password = password;
+        this.color = color;
     }
 
     public String getName() {
         return name;
+    }
+
+    public ChatFormatting getColor() {
+        return color;
     }
 
     public UUID getLeader() {
