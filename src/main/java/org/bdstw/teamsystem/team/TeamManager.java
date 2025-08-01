@@ -44,10 +44,11 @@ public class TeamManager {
         nextColorIndex = 0;
         createLoneWolfTeam(server);
         createPredefinedTeams(server);
+        // 修正：在初始化時就設定好擊殺計數
+        setupKillsObjective(server);
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             addPlayerToLoneWolfTeam(player);
         }
-        setupKillsObjective(server);
     }
 
     private static void cleanupOldScoreboardTeams(MinecraftServer server) {
@@ -68,7 +69,7 @@ public class TeamManager {
             String name = entry.getKey();
             ChatFormatting color = entry.getValue();
             if (getTeam(name) == null) {
-                Team team = new Team(name, SYSTEM_UUID, null, color);
+                Team team = new Team(name, SYSTEM_UUID, color);
                 teams.put(name, team);
                 registerTeamInScoreboard(team, server);
             }
@@ -77,17 +78,24 @@ public class TeamManager {
 
     private static void setupKillsObjective(MinecraftServer server) {
         Scoreboard scoreboard = server.getScoreboard();
-        // 修正：使用 Forge 提供的標準常數，這是最穩定的作法
-        ObjectiveCriteria criteria = ObjectiveCriteria.byName("playerKillCount").get();
-        Component displayName = Component.literal("殺敵數").withStyle(ChatFormatting.RED);
-
-        Objective objective = scoreboard.getObjective(KILLS_OBJECTIVE_NAME);
-        if (objective == null) {
-            objective = scoreboard.addObjective(KILLS_OBJECTIVE_NAME, criteria, displayName, ObjectiveCriteria.RenderType.INTEGER);
+        // 修正：在伺服器啟動時，移除舊的計分項以清空所有分數
+        Objective oldObjective = scoreboard.getObjective(KILLS_OBJECTIVE_NAME);
+        if (oldObjective != null) {
+            scoreboard.removeObjective(oldObjective);
         }
 
-        // 修正：使用 DisplaySlot.LIST 常數，而不是數字 0
-        scoreboard.setDisplayObjective(0, objective); // 0 是 LIST（玩家列表），1 是 SIDEBAR，2 是 BELOW_NAME
+        // 使用標準的擊殺計數類型
+        // 舊寫法
+        // ObjectiveCriteria criteria = ObjectiveCriteria.PLAYER_KILL_COUNT;
+        // 新寫法
+        ObjectiveCriteria criteria = ObjectiveCriteria.byName("playerKillCount").orElseThrow();
+        Component displayName = Component.literal("殺敵數").withStyle(ChatFormatting.RED);
+
+        // 重新建立計分項
+        Objective objective = scoreboard.addObjective(KILLS_OBJECTIVE_NAME, criteria, displayName, ObjectiveCriteria.RenderType.INTEGER);
+
+        // 將計分項顯示在 TAB 列表
+        scoreboard.setDisplayObjective(0, objective); // 0=LIST, 1=SIDEBAR, 2=BELOW_NAME
     }
 
     private static void createLoneWolfTeam(MinecraftServer server) {
@@ -98,7 +106,6 @@ public class TeamManager {
             loneWolfTeam.setColor(ChatFormatting.WHITE);
             MutableComponent prefix = Component.literal("[孤狼] ").withStyle(ChatFormatting.GRAY);
             loneWolfTeam.setPlayerPrefix(prefix);
-            // 孤狼隊伍：允許隊友傷害
             loneWolfTeam.setAllowFriendlyFire(true);
             loneWolfTeam.setSeeFriendlyInvisibles(false);
             loneWolfTeam.setNameTagVisibility(PlayerTeam.Visibility.ALWAYS);
@@ -115,7 +122,6 @@ public class TeamManager {
             scoreboardTeam.setColor(ChatFormatting.WHITE);
             MutableComponent prefix = Component.literal("[" + teamName + "]").withStyle(team.getColor());
             scoreboardTeam.setPlayerPrefix(prefix);
-            // 其他所有隊伍：禁止隊友傷害
             scoreboardTeam.setAllowFriendlyFire(false);
             scoreboardTeam.setSeeFriendlyInvisibles(true);
             scoreboardTeam.setNameTagVisibility(PlayerTeam.Visibility.ALWAYS);
@@ -127,11 +133,11 @@ public class TeamManager {
         return new ArrayList<>(predefinedTeamInfo.keySet());
     }
 
-    public static void createTeamByAdmin(String teamName, @Nullable String password, MinecraftServer server) {
+    public static void createTeamByAdmin(String teamName, MinecraftServer server) {
         if (teams.containsKey(teamName)) return;
         ChatFormatting color = availableColors.get(nextColorIndex % availableColors.size());
         nextColorIndex++;
-        Team team = new Team(teamName, SYSTEM_UUID, password, color);
+        Team team = new Team(teamName, SYSTEM_UUID, color);
         teams.put(teamName, team);
         registerTeamInScoreboard(team, server);
     }
@@ -224,6 +230,27 @@ public class TeamManager {
         PlayerTeam scoreboardTeam = scoreboard.getPlayerTeam(team.getName());
         if (scoreboardTeam != null) {
             scoreboard.addPlayerToTeam(player.getScoreboardName(), scoreboardTeam);
+        }
+    }
+
+    // 新增：重置指定玩家們的擊殺數
+    public static void resetPlayersKills(MinecraftServer server, Collection<ServerPlayer> players) {
+        Scoreboard scoreboard = server.getScoreboard();
+        Objective objective = scoreboard.getObjective(KILLS_OBJECTIVE_NAME);
+        if (objective != null) {
+            for (ServerPlayer player : players) {
+                scoreboard.resetPlayerScore(player.getScoreboardName(), objective);
+            }
+        }
+    }
+
+    // 新增：重置單一玩家的擊殺數
+    public static void resetPlayerKills(ServerPlayer player) {
+        if (player.getServer() == null) return;
+        Scoreboard scoreboard = player.getServer().getScoreboard();
+        Objective objective = scoreboard.getObjective(KILLS_OBJECTIVE_NAME);
+        if (objective != null) {
+            scoreboard.resetPlayerScore(player.getScoreboardName(), objective);
         }
     }
 

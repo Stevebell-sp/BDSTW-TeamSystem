@@ -2,7 +2,6 @@ package org.bdstw.teamsystem.team;
 
 import net.minecraft.ChatFormatting;
 
-import javax.annotation.Nullable;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -11,16 +10,14 @@ public class Team {
     private final String name;
     private UUID leader;
     private final Set<UUID> members;
-    @Nullable
-    private final String password;
     private final ChatFormatting color;
 
-    public Team(String name, UUID leader, @Nullable String password, ChatFormatting color) {
+    // 修正：建構子不再需要 password 參數
+    public Team(String name, UUID leader, ChatFormatting color) {
         this.name = name;
         this.leader = leader;
         this.members = ConcurrentHashMap.newKeySet();
         this.members.add(leader);
-        this.password = password;
         this.color = color;
     }
 
@@ -60,16 +57,7 @@ public class Team {
         return leader.equals(player);
     }
 
-    public boolean isPublic() {
-        return password == null || password.isEmpty();
-    }
-
-    public boolean checkPassword(@Nullable String input) {
-        if (isPublic()) {
-            return true;
-        }
-        return password.equals(input);
-    }
+    // 移除 isPublic() 和 checkPassword() 方法
 
     public int getSize() {
         return members.size();

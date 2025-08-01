@@ -8,7 +8,6 @@ import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.ServerChatEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import org.bdstw.teamsystem.command.RTPCommand;
 import org.bdstw.teamsystem.command.TeamAdminCommand;
 import org.bdstw.teamsystem.command.TeamCommand;
 import org.bdstw.teamsystem.team.Team;
@@ -19,13 +18,17 @@ public class ServerEvents {
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent event) {
         TeamCommand.register(event.getDispatcher());
-        RTPCommand.register(event.getDispatcher());
+        // 移除了舊的 RTPCommand 註冊
         TeamAdminCommand.register(event.getDispatcher());
     }
 
     @SubscribeEvent
     public void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
+            // 新增：在玩家登入時重置其擊殺計數
+            TeamManager.resetPlayerKills(player);
+
+            // 原有邏輯
             Team team = TeamManager.getTeam(player);
             if (team != null) {
                 TeamManager.addPlayerToScoreboardTeam(player, team);
@@ -39,7 +42,8 @@ public class ServerEvents {
     public void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             if (TeamManager.isInTeam(player)) {
-                TeamManager.forceLeaveTeam(player);
+                // 這裡可以選擇是否在玩家登出時將其移出隊伍
+                // TeamManager.forceLeaveTeam(player);
             }
         }
     }
@@ -53,27 +57,20 @@ public class ServerEvents {
         MutableComponent finalPlayerDisplay;
 
         if (team != null) {
-            // 玩家在一個隊伍中
             MutableComponent prefix = Component.literal("[" + team.getName() + "]").withStyle(team.getColor());
             MutableComponent playerName = Component.literal(player.getName().getString()).withStyle(ChatFormatting.WHITE);
             finalPlayerDisplay = prefix.append(playerName);
         } else {
-            // 玩家是孤狼
             MutableComponent prefix = Component.literal("[孤狼]").withStyle(ChatFormatting.GRAY);
             MutableComponent playerName = Component.literal(player.getName().getString()).withStyle(ChatFormatting.WHITE);
             finalPlayerDisplay = prefix.append(playerName);
         }
 
-        // 組合完整的聊天訊息，格式為: [隊伍名稱]玩家 : 訊息內容
         Component finalMessage = finalPlayerDisplay
                 .append(Component.literal(" : ").withStyle(ChatFormatting.WHITE))
-                // 修正：將訊息內容強制設為白色，避免繼承到隊伍顏色
                 .append(Component.literal(messageContent).withStyle(ChatFormatting.WHITE));
 
-        // 取消原始的聊天事件
         event.setCanceled(true);
-
-        // 手動將我們格式化後的訊息廣播給所有玩家
         player.getServer().getPlayerList().broadcastSystemMessage(finalMessage, false);
     }
 }

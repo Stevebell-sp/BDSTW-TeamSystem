@@ -18,7 +18,6 @@ public class TeamCommand {
 
     private static final String PREFIX = "commands.bdstw_teamsystem.prefix";
 
-    // 權限檢查：檢查是否在隊伍中
     private static final Predicate<CommandSourceStack> IS_IN_TEAM = source -> {
         try {
             return TeamManager.isInTeam(source.getPlayerOrException());
@@ -29,13 +28,9 @@ public class TeamCommand {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("team")
-                .requires(source -> true) // 主指令對所有人開放
-
-                // --- 對所有玩家開放的指令 ---
+                .requires(source -> true)
                 .then(Commands.literal("list")
                         .executes(TeamCommand::listTeams))
-
-                // --- 僅限在隊伍中的玩家使用 ---
                 .then(Commands.literal("info").requires(IS_IN_TEAM)
                         .executes(TeamCommand::teamInfo))
         );
@@ -45,7 +40,6 @@ public class TeamCommand {
         CommandSourceStack source = context.getSource();
         source.sendSystemMessage(Component.translatable("commands.bdstw_teamsystem.list.header", TeamManager.getAllTeams().size()));
         TeamManager.getAllTeams().forEach(team -> {
-            // 處理隊長是系統的情況
             String leaderName = "系統";
             if (!team.isLeader(TeamManager.SYSTEM_UUID)) {
                 ServerPlayer leader = source.getServer().getPlayerList().getPlayer(team.getLeader());
@@ -54,13 +48,12 @@ public class TeamCommand {
                 }
             }
 
-            String privacy = team.isPublic() ? "list.public" : "list.private";
+            // 修正：移除隱私狀態的顯示
             source.sendSystemMessage(Component.translatable("commands.bdstw_teamsystem.list.entry",
                     team.getName(),
                     leaderName,
                     team.getSize(),
-                    TeamSystemConfig.MAX_TEAM_SIZE.get(),
-                    Component.translatable("commands.bdstw_teamsystem." + privacy)
+                    TeamSystemConfig.MAX_TEAM_SIZE.get()
             ));
         });
         return 1;
@@ -70,7 +63,6 @@ public class TeamCommand {
         ServerPlayer player = context.getSource().getPlayerOrException();
         Team team = TeamManager.getTeam(player);
 
-        // 處理隊長是系統的情況
         String leaderName = "系統";
         if (!team.isLeader(TeamManager.SYSTEM_UUID)) {
             ServerPlayer leader = context.getSource().getServer().getPlayerList().getPlayer(team.getLeader());
@@ -88,9 +80,5 @@ public class TeamCommand {
                 .forEach(p -> context.getSource().sendSystemMessage(Component.translatable("commands.bdstw_teamsystem.info.member_entry", p.getName().getString())));
 
         return 1;
-    }
-
-    private static void sendError(CommandContext<CommandSourceStack> context, String key, Object... args) {
-        context.getSource().sendFailure(Component.translatable(PREFIX).append(Component.translatable("commands.bdstw_teamsystem." + key, args)));
     }
 }
