@@ -6,9 +6,10 @@ public class TeamSystemConfig {
     public static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
     public static final ForgeConfigSpec SPEC;
 
-    // 修正：恢復 MAX_TEAM_SIZE 的定義以解決編譯錯誤
-    // 由於相關功能已被停用，此設定在遊戲中不會生效
     public static final ForgeConfigSpec.IntValue MAX_TEAM_SIZE;
+
+    // 新增：F3 功能開關的設定
+    public static final ForgeConfigSpec.BooleanValue DISABLE_F3_FOR_NON_OPS;
 
     static {
 
@@ -18,6 +19,12 @@ public class TeamSystemConfig {
                 .defineInRange("maxTeamSize", 8, 2, 64);
         BUILDER.pop();
 
+        // 新增：客戶端專屬設定區塊
+        BUILDER.push("Client Settings");
+        DISABLE_F3_FOR_NON_OPS = BUILDER
+                .comment("若設為 true，將會禁用非管理員玩家的 F3 除錯畫面。")
+                .define("disableF3ForNonOps", true);
+        BUILDER.pop();
 
         SPEC = BUILDER.build();
     }

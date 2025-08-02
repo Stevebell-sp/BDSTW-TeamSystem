@@ -5,11 +5,11 @@
   "commands.bdstw_teamsystem.random.value.success": "隨機結果為 §a%s§r。",
   "commands.bdstw_teamsystem.random.roll.broadcast": "%s 擲出了 §a%s§r (%s..%s)",
   "commands.bdstw_teamsystem.random.reset.success": "已重置隨機序列 §e%s§r。",
-  "commands.bdstw_teamsystem.random.reset.all.success": "已重置所有隨機序列。",
   "commands.bdstw_teamsystem.random.error.invalid_range": "§c無效的範圍：最小值不可大於最大值。",
   "commands.bdstw_teamsystem.random.error.range_too_large": "§c請求的範圍過大 (%s > %s)，無法處理。",
 
   "commands.bdstw_teamsystem.error.no_team": "§c你不在任何隊伍中。",
+  "commands.bdstw_teamsystem.error.f3_disabled": "§c你沒有權限使用除錯畫面。",
   "commands.bdstw_teamsystem.error.not_leader": "§c你不是隊長，無法執行此操作。",
   "commands.bdstw_teamsystem.error.player_not_found": "§c找不到玩家 §e%s§c。",
   "commands.bdstw_teamsystem.error.team_not_found": "§c找不到名為 §e%s §c的隊伍。",
