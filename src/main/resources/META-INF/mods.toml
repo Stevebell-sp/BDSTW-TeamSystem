@@ -3,7 +3,7 @@ modLoader="javafml"
 # Forge API 版本
 loaderVersion="[47,)"
 # 授權條款
-license="All Rights Reserved"
+license="BSD 3-Clause"
 # 顯示在模組列表的連結
 [[mods]]
 modId="bdstw_teamsystem"

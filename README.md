@@ -2,7 +2,7 @@
 
 ![模組 Logo](https://github.com/Stevebell-sp/BDSTW-TeamSystem/blob/main/src/main/resources/logo.png?raw=true)
 
-![Minecraft Version](https://img.shields.io/badge/Minecraft-1.20.1-green?style=for-the-badge&logo=minecraft) ![Forge Version](https://img.shields.io/badge/Forge-47.3.0+-blue?style=for-the-badge&logo=forge) ![License](https://img.shields.io/badge/License-All%20Rights%20Reserved-red.svg?style=for-the-badge)
+![Minecraft Version](https://img.shields.io/badge/Minecraft-1.20.1-green?style=for-the-badge&logo=minecraft) ![Forge Version](https://img.shields.io/badge/Forge-47.3.0+-blue?style=for-the-badge&logo=forge) ![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg?style=for-the-badge)
 
 **一個為 Minecraft 伺服器設計，由管理員驅動的強大隊伍與隨機性控制模組。**
 
@@ -97,8 +97,6 @@
 
 - **BDSTW 小誠**
 
-## 📜 授權條款
+## 📜 授權條款 (License)
 
-本模組為 **版權所有 (All Rights Reserved)**。
-
-未經作者明確許可，禁止以任何形式複製、修改、散布或重新發布本模組的任何部分。
+本模組採用 **BSD 3-Clause License** 進行授權。
