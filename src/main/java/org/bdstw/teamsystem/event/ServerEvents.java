@@ -9,7 +9,7 @@ import net.minecraftforge.event.ServerChatEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.bdstw.teamsystem.command.RandomCommand;
-import org.bdstw.teamsystem.command.RandomSequenceCommand; // 新增 import
+import org.bdstw.teamsystem.command.RandomSequenceCommand;
 import org.bdstw.teamsystem.command.TeamAdminCommand;
 import org.bdstw.teamsystem.command.TeamCommand;
 import org.bdstw.teamsystem.team.Team;
@@ -19,14 +19,18 @@ public class ServerEvents {
 
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent event) {
-        TeamCommand.register(event.getDispatcher());
-        TeamAdminCommand.register(event.getDispatcher());
+        // 修正：註解掉隊伍相關指令的註冊
+        // TeamCommand.register(event.getDispatcher());
+        // TeamAdminCommand.register(event.getDispatcher());
+
+        // 保留隨機指令的註冊
         RandomCommand.register(event.getDispatcher());
-        RandomSequenceCommand.register(event.getDispatcher()); // 新增指令註冊
+        RandomSequenceCommand.register(event.getDispatcher());
     }
 
     @SubscribeEvent
     public void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
+        /* 修正：暫時停用所有玩家登入時的邏輯
         if (event.getEntity() instanceof ServerPlayer player) {
             TeamManager.resetPlayerKills(player);
             Team team = TeamManager.getTeam(player);
@@ -36,15 +40,21 @@ public class ServerEvents {
                 TeamManager.addPlayerToLoneWolfTeam(player);
             }
         }
+        */
     }
 
     @SubscribeEvent
     public void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
-        // ...
+        /* 修正：暫時停用所有玩家登出時的邏輯
+        if (event.getEntity() instanceof ServerPlayer player) {
+            // ...
+        }
+        */
     }
 
     @SubscribeEvent
     public void onChatMessage(ServerChatEvent event) {
+        /* 修正：暫時停用聊天格式化功能
         ServerPlayer player = event.getPlayer();
         Team team = TeamManager.getTeam(player);
         String messageContent = event.getRawText();
@@ -67,5 +77,6 @@ public class ServerEvents {
 
         event.setCanceled(true);
         player.getServer().getPlayerList().broadcastSystemMessage(finalMessage, false);
+        */
     }
 }

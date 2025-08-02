@@ -39,10 +39,13 @@ public class TeamSystem {
         LOGGER.info(" 浩浩大笨笨~~~！！！  by小誠");
         LOGGER.info("========================================");
 
-        // 修正：呼叫一個新的方法來重置並初始化所有隊伍相關數據
-        LOGGER.info(" 正在重設並初始化隊伍系統...");
-        TeamManager.resetAndInitializeData(event.getServer());
-        LOGGER.info(" 隊伍系統準備就緒！");
+        // 修正：註解掉完整的隊伍初始化
+        // TeamManager.resetAndInitializeData(event.getServer());
+
+        // 新增：僅初始化 random 指令需要的計分板
+        LOGGER.info(" 正在初始化隨機指令系統...");
+        TeamManager.setupRandomVersionObjective(event.getServer());
+        LOGGER.info(" 隨機指令系統準備就緒！");
 
         LOGGER.info("========================================");
     }
