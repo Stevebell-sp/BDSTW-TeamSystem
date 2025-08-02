@@ -5,6 +5,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.scores.PlayerTeam; // 新增：明確導入原版 PlayerTeam 類別
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.ServerChatEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
@@ -14,7 +15,6 @@ import org.bdstw.teamsystem.command.RandomCommand;
 import org.bdstw.teamsystem.command.RandomSequenceCommand;
 import org.bdstw.teamsystem.command.TeamAdminCommand;
 import org.bdstw.teamsystem.command.TeamCommand;
-import org.bdstw.teamsystem.team.Team;
 import org.bdstw.teamsystem.team.TeamManager;
 
 import java.util.HashMap;
@@ -26,20 +26,18 @@ public class ServerEvents {
     private final Map<UUID, String> playerTeamTracker = new HashMap<>();
 
     private static final String LONE_WOLF_GROUP_LEAVE_COMMAND = "groups leave (孤狼)";
+    // 修正：將觸發指令的隊伍名稱改為英文
     private static final Map<String, String> groupJoinCommands = Map.of(
-            "藍隊", "groups join a100b1ac-cd23-4b75-a7f4-6b625c0215a1 2222",
-            "紅隊", "groups join 9dcf5767-0475-40a7-b001-f1f8052bf22 1111",
-            "白隊", "groups join 7f2a76bd-0bc4-4cde-9f71-5de12e24bc60 3333",
-            "綠隊", "groups join 60922881-5ced-408b-8876-07e8ac5e2b40 4444"
+            "blue", "groups join a100b1ac-cd23-4b75-a7f4-6b625c0215a1 2222",
+            "red", "groups join 9dcf5767-0475-40a7-b001-f1f8052bf22 1111",
+            "white", "groups join 7f2a76bd-0bc4-4cde-9f71-5de12e24bc60 3333",
+            "green", "groups join 60922881-5ced-408b-8876-07e8ac5e2b40 4444"
     );
 
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent event) {
-        // 註解掉模組自身的隊伍指令
-        // TeamCommand.register(event.getDispatcher());
-        // TeamAdminCommand.register(event.getDispatcher());
-
-        // 保留隨機指令
+        TeamCommand.register(event.getDispatcher());
+        TeamAdminCommand.register(event.getDispatcher());
         RandomCommand.register(event.getDispatcher());
         RandomSequenceCommand.register(event.getDispatcher());
     }
@@ -47,12 +45,11 @@ public class ServerEvents {
     @SubscribeEvent
     public void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
-            // 註解掉擊殺計數重置功能
-            // TeamManager.resetPlayerKills(player);
+            TeamManager.resetPlayerKills(player);
 
-            // 保留原版隊伍偵測的追蹤器初始化
-            var team = player.getTeam();
-            String teamName = team != null ? team.getName() : "";
+            // 修正：改用更明確的方式從計分板取得隊伍
+            PlayerTeam vanillaTeam = player.getScoreboard().getPlayersTeam(player.getScoreboardName());
+            String teamName = vanillaTeam != null ? vanillaTeam.getName() : "";
             playerTeamTracker.put(player.getUUID(), teamName);
         }
     }
@@ -75,8 +72,9 @@ public class ServerEvents {
 
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             UUID playerUUID = player.getUUID();
-            var currentTeam = player.getTeam();
-            String currentTeamName = currentTeam != null ? currentTeam.getName() : "";
+            // 修正：改用更明確的方式從計分板取得隊伍
+            PlayerTeam currentVanillaTeam = player.getScoreboard().getPlayersTeam(player.getScoreboardName());
+            String currentTeamName = currentVanillaTeam != null ? currentVanillaTeam.getName() : "";
             String lastKnownTeamName = playerTeamTracker.getOrDefault(playerUUID, "");
 
             if (!currentTeamName.equals(lastKnownTeamName)) {
@@ -87,47 +85,55 @@ public class ServerEvents {
     }
 
     private void handleTeamChange(ServerPlayer player, String oldTeamName, String newTeamName) {
+        //player.sendSystemMessage(Component.literal("§e[除錯] §7偵測到隊伍變更: " + (oldTeamName.isEmpty() ? "無" : oldTeamName) + " -> " + (newTeamName.isEmpty() ? "無" : newTeamName)));
+
         String joinCommand = groupJoinCommands.get(newTeamName);
 
         if (joinCommand != null) {
-            executeCommandAsPlayer(player, LONE_WOLF_GROUP_LEAVE_COMMAND);
-            executeCommandAsPlayer(player, joinCommand);
+            executeCommandForPlayer(player, LONE_WOLF_GROUP_LEAVE_COMMAND);
+            executeCommandForPlayer(player, joinCommand);
         } else if (groupJoinCommands.containsKey(oldTeamName)) {
-            executeCommandAsPlayer(player, LONE_WOLF_GROUP_LEAVE_COMMAND);
+            executeCommandForPlayer(player, LONE_WOLF_GROUP_LEAVE_COMMAND);
         }
     }
 
     @SubscribeEvent
     public void onChatMessage(ServerChatEvent event) {
-        /* 註解掉聊天格式化功能，恢復為原版聊天
         ServerPlayer player = event.getPlayer();
-        Team team = TeamManager.getTeam(player);
+        // 修正：改用更明確的方式從計分板取得隊伍
+        PlayerTeam vanillaPlayerTeam = player.getScoreboard().getPlayersTeam(player.getScoreboardName());
         String messageContent = event.getRawText();
 
         MutableComponent finalPlayerDisplay;
 
-        if (team != null) {
-            MutableComponent prefix = Component.literal("[" + team.getName() + "]").withStyle(team.getColor());
-            MutableComponent playerName = Component.literal(player.getName().getString()).withStyle(ChatFormatting.WHITE);
-            finalPlayerDisplay = prefix.append(playerName);
+        if (vanillaPlayerTeam != null) {
+            // 修正：移除 .withStyle(vanillaPlayerTeam.getColor()) 來取消顏色
+            MutableComponent prefix = Component.literal("[").append(vanillaPlayerTeam.getDisplayName()).append("]");
+            MutableComponent playerName = Component.literal(player.getName().getString());
+            finalPlayerDisplay = prefix.append(" ").append(playerName);
         } else {
-            MutableComponent prefix = Component.literal("[孤狼]").withStyle(ChatFormatting.GRAY);
-            MutableComponent playerName = Component.literal(player.getName().getString()).withStyle(ChatFormatting.WHITE);
-            finalPlayerDisplay = prefix.append(playerName);
+            MutableComponent prefix = Component.literal("[孤狼]");
+            MutableComponent playerName = Component.literal(player.getName().getString());
+            finalPlayerDisplay = prefix.append(" ").append(playerName);
         }
 
+        // 組合訊息，讓 Minecraft 使用預設顏色
         Component finalMessage = finalPlayerDisplay
-                .append(Component.literal(" : ").withStyle(ChatFormatting.WHITE))
-                .append(Component.literal(messageContent).withStyle(ChatFormatting.WHITE));
+                .append(Component.literal(" : "))
+                .append(Component.literal(messageContent));
 
         event.setCanceled(true);
         player.getServer().getPlayerList().broadcastSystemMessage(finalMessage, false);
-        */
     }
 
-    private void executeCommandAsPlayer(ServerPlayer player, String command) {
-        if (player.getServer() != null) {
-            player.getServer().getCommands().performPrefixedCommand(player.createCommandSourceStack(), command);
+    private void executeCommandForPlayer(ServerPlayer player, String commandPrefix) {
+        MinecraftServer server = player.getServer();
+        if (server != null) {
+            String fullCommand = commandPrefix + " " + player.getName().getString();
+            // 修正：更新除錯訊息以反映新的執行方式
+            //player.sendSystemMessage(Component.literal("§e[除錯] §7正在模擬玩家執行: /" + fullCommand));
+            // 修正：使用 player.createCommandSourceStack() 來模擬玩家執行指令
+            server.getCommands().performPrefixedCommand(player.createCommandSourceStack(), fullCommand);
         }
     }
 }
