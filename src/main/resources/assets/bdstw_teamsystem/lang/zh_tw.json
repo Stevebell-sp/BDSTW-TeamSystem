@@ -8,6 +8,10 @@
   "commands.bdstw_teamsystem.random.error.invalid_range": "§c無效的範圍：最小值不可大於最大值。",
   "commands.bdstw_teamsystem.random.error.range_too_large": "§c請求的範圍過大 (%s > %s)，無法處理。",
 
+  "commands.bdstw_teamsystem.anticheat.f3b_warning": "§e[警告] §c玩家 %s 嘗試使用作弊功能！",
+  "commands.bdstw_teamsystem.anticheat.f3b_death": "§c玩家 %s 因屢次嘗試作弊而被系統處決！",
+  "commands.bdstw_teamsystem.anticheat.f3b_marked": "§4[系統] §c玩家 %s 已被標記為作弊者！",
+
   "commands.bdstw_teamsystem.error.no_team": "§c你不在任何隊伍中。",
   "commands.bdstw_teamsystem.error.f3_disabled": "§c你沒有權限使用除錯畫面。",
   "commands.bdstw_teamsystem.error.not_leader": "§c你不是隊長，無法執行此操作。",

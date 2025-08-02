@@ -12,6 +12,7 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.bdstw.teamsystem.config.TeamSystemConfig;
 import org.bdstw.teamsystem.event.ServerEvents;
+import org.bdstw.teamsystem.network.PacketHandler;
 import org.bdstw.teamsystem.team.TeamManager;
 import org.slf4j.Logger;
 
@@ -30,6 +31,7 @@ public class TeamSystem {
 
     private void commonSetup(final FMLCommonSetupEvent event) {
         LOGGER.info("BDSTW TeamSystem Common Setup");
+        event.enqueueWork(PacketHandler::register);
     }
 
     @SubscribeEvent
@@ -39,14 +41,14 @@ public class TeamSystem {
         LOGGER.info(" 浩浩大笨笨~~~！！！  by小誠");
         LOGGER.info("========================================");
 
-        // 修正：註解掉完整的隊伍初始化
+        // 註解掉模組自身的完整隊伍系統初始化
         // TeamManager.resetAndInitializeData(event.getServer());
 
-        // 新增：僅初始化 random 指令需要的計分板
-        LOGGER.info(" 正在初始化隨機指令系統...");
+        // 保留其他必要功能的初始化
+        LOGGER.info(" 正在初始化計分板...");
+        TeamManager.setupKillsObjective(event.getServer());
         TeamManager.setupRandomVersionObjective(event.getServer());
-        LOGGER.info(" 隨機指令系統準備就緒！");
-
+        LOGGER.info(" 計分板準備就緒！");
         LOGGER.info("========================================");
     }
 }

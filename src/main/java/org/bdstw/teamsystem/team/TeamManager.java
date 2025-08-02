@@ -5,7 +5,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
-
 import net.minecraft.world.scores.Objective;
 import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.scores.Scoreboard;
@@ -37,6 +36,7 @@ public class TeamManager {
     private static final String LONE_WOLF_TEAM_NAME = "lone_wolf_team";
     private static final String KILLS_OBJECTIVE_NAME = "playerKills";
     public static final String RANDOM_VERSION_OBJECTIVE_NAME = "bdstw_rand_ver";
+
 
     public static void resetAndInitializeData(MinecraftServer server) {
         cleanupOldScoreboardTeams(server);
@@ -77,7 +77,8 @@ public class TeamManager {
         }
     }
 
-    private static void setupKillsObjective(MinecraftServer server) {
+    // 修正：將存取權限從 private 改為 public
+    public static void setupKillsObjective(MinecraftServer server) {
         Scoreboard scoreboard = server.getScoreboard();
         Objective oldObjective = scoreboard.getObjective(KILLS_OBJECTIVE_NAME);
         if (oldObjective != null) {
@@ -87,7 +88,9 @@ public class TeamManager {
         ObjectiveCriteria criteria = ObjectiveCriteria.byName("playerKillCount").orElse(ObjectiveCriteria.DUMMY);
         Component displayName = Component.literal("殺敵數").withStyle(ChatFormatting.RED);
         Objective objective = scoreboard.addObjective(KILLS_OBJECTIVE_NAME, criteria, displayName, ObjectiveCriteria.RenderType.INTEGER);
-        scoreboard.setDisplayObjective(0, objective);
+
+        // 註解掉此行即可取消在 TAB 列表中的顯示
+        // scoreboard.setDisplayObjective(0, objective);
     }
 
     public static void setupRandomVersionObjective(MinecraftServer server) {
@@ -159,8 +162,6 @@ public class TeamManager {
         team.addMember(player.getUUID());
         playerTeamMap.put(player.getUUID(), team.getName());
         addPlayerToScoreboardTeam(player, team);
-
-        // 移除：指令執行邏輯已轉移至 ServerEvents
 
         player.sendSystemMessage(Component.literal("你已被管理員加入隊伍 " + team.getName()));
         team.getMembers().stream()

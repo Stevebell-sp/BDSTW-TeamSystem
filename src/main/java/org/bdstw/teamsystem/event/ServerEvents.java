@@ -35,8 +35,11 @@ public class ServerEvents {
 
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent event) {
-        TeamCommand.register(event.getDispatcher());
-        TeamAdminCommand.register(event.getDispatcher());
+        // 註解掉模組自身的隊伍指令
+        // TeamCommand.register(event.getDispatcher());
+        // TeamAdminCommand.register(event.getDispatcher());
+
+        // 保留隨機指令
         RandomCommand.register(event.getDispatcher());
         RandomSequenceCommand.register(event.getDispatcher());
     }
@@ -44,9 +47,10 @@ public class ServerEvents {
     @SubscribeEvent
     public void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
-            TeamManager.resetPlayerKills(player);
+            // 註解掉擊殺計數重置功能
+            // TeamManager.resetPlayerKills(player);
 
-            // 修正：使用 'var' 關鍵字來避免類型混淆
+            // 保留原版隊伍偵測的追蹤器初始化
             var team = player.getTeam();
             String teamName = team != null ? team.getName() : "";
             playerTeamTracker.put(player.getUUID(), teamName);
@@ -71,7 +75,6 @@ public class ServerEvents {
 
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             UUID playerUUID = player.getUUID();
-            // 修正：使用 'var' 關鍵字來避免類型混淆
             var currentTeam = player.getTeam();
             String currentTeamName = currentTeam != null ? currentTeam.getName() : "";
             String lastKnownTeamName = playerTeamTracker.getOrDefault(playerUUID, "");
@@ -96,6 +99,7 @@ public class ServerEvents {
 
     @SubscribeEvent
     public void onChatMessage(ServerChatEvent event) {
+        /* 註解掉聊天格式化功能，恢復為原版聊天
         ServerPlayer player = event.getPlayer();
         Team team = TeamManager.getTeam(player);
         String messageContent = event.getRawText();
@@ -118,6 +122,7 @@ public class ServerEvents {
 
         event.setCanceled(true);
         player.getServer().getPlayerList().broadcastSystemMessage(finalMessage, false);
+        */
     }
 
     private void executeCommandAsPlayer(ServerPlayer player, String command) {
