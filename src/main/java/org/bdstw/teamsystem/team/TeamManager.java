@@ -5,6 +5,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+
 import net.minecraft.world.scores.Objective;
 import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.scores.Scoreboard;
@@ -35,9 +36,7 @@ public class TeamManager {
     public static final UUID SYSTEM_UUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
     private static final String LONE_WOLF_TEAM_NAME = "lone_wolf_team";
     private static final String KILLS_OBJECTIVE_NAME = "playerKills";
-    // 新增：用於儲存隨機序列版本號的計分板目標名稱
     public static final String RANDOM_VERSION_OBJECTIVE_NAME = "bdstw_rand_ver";
-
 
     public static void resetAndInitializeData(MinecraftServer server) {
         cleanupOldScoreboardTeams(server);
@@ -47,7 +46,6 @@ public class TeamManager {
         createLoneWolfTeam(server);
         createPredefinedTeams(server);
         setupKillsObjective(server);
-        // 新增：在伺服器啟動時設定隨機版本計分板
         setupRandomVersionObjective(server);
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             addPlayerToLoneWolfTeam(player);
@@ -86,20 +84,15 @@ public class TeamManager {
             scoreboard.removeObjective(oldObjective);
         }
 
-        // 修正：使用 1.20.1 相容的方式取得擊殺計數標準
         ObjectiveCriteria criteria = ObjectiveCriteria.byName("playerKillCount").orElse(ObjectiveCriteria.DUMMY);
         Component displayName = Component.literal("殺敵數").withStyle(ChatFormatting.RED);
         Objective objective = scoreboard.addObjective(KILLS_OBJECTIVE_NAME, criteria, displayName, ObjectiveCriteria.RenderType.INTEGER);
-
-        // 修正：使用整數 0 來代表 TAB 列表欄位 (DisplaySlot.LIST)
         scoreboard.setDisplayObjective(0, objective);
     }
 
-    // 新增：設定隨機序列版本計分板的方法
     public static void setupRandomVersionObjective(MinecraftServer server) {
         Scoreboard scoreboard = server.getScoreboard();
         if (scoreboard.getObjective(RANDOM_VERSION_OBJECTIVE_NAME) == null) {
-            // 修正：為 addObjective 方法提供完整的四個參數
             scoreboard.addObjective(RANDOM_VERSION_OBJECTIVE_NAME, ObjectiveCriteria.DUMMY, Component.literal("Random Sequence Versions"), ObjectiveCriteria.RenderType.INTEGER);
         }
     }
@@ -166,6 +159,8 @@ public class TeamManager {
         team.addMember(player.getUUID());
         playerTeamMap.put(player.getUUID(), team.getName());
         addPlayerToScoreboardTeam(player, team);
+
+        // 移除：指令執行邏輯已轉移至 ServerEvents
 
         player.sendSystemMessage(Component.literal("你已被管理員加入隊伍 " + team.getName()));
         team.getMembers().stream()
@@ -244,7 +239,6 @@ public class TeamManager {
         Objective objective = scoreboard.getObjective(KILLS_OBJECTIVE_NAME);
         if (objective != null) {
             for (ServerPlayer player : players) {
-                // 修正：使用 getScoreboardName() 來取得玩家在計分板上的正確名稱
                 scoreboard.resetPlayerScore(player.getScoreboardName(), objective);
             }
         }
@@ -255,7 +249,6 @@ public class TeamManager {
         Scoreboard scoreboard = player.getServer().getScoreboard();
         Objective objective = scoreboard.getObjective(KILLS_OBJECTIVE_NAME);
         if (objective != null) {
-            // 修正：使用 getScoreboardName() 來取得玩家在計分板上的正確名稱
             scoreboard.resetPlayerScore(player.getScoreboardName(), objective);
         }
     }
