@@ -5,7 +5,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
-
 import net.minecraft.world.scores.Objective;
 import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.scores.Scoreboard;
@@ -36,6 +35,9 @@ public class TeamManager {
     public static final UUID SYSTEM_UUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
     private static final String LONE_WOLF_TEAM_NAME = "lone_wolf_team";
     private static final String KILLS_OBJECTIVE_NAME = "playerKills";
+    // 新增：用於儲存隨機序列版本號的計分板目標名稱
+    public static final String RANDOM_VERSION_OBJECTIVE_NAME = "bdstw_rand_ver";
+
 
     public static void resetAndInitializeData(MinecraftServer server) {
         cleanupOldScoreboardTeams(server);
@@ -44,8 +46,9 @@ public class TeamManager {
         nextColorIndex = 0;
         createLoneWolfTeam(server);
         createPredefinedTeams(server);
-        // 修正：在初始化時就設定好擊殺計數
         setupKillsObjective(server);
+        // 新增：在伺服器啟動時設定隨機版本計分板
+        setupRandomVersionObjective(server);
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             addPlayerToLoneWolfTeam(player);
         }
@@ -78,24 +81,27 @@ public class TeamManager {
 
     private static void setupKillsObjective(MinecraftServer server) {
         Scoreboard scoreboard = server.getScoreboard();
-        // 修正：在伺服器啟動時，移除舊的計分項以清空所有分數
         Objective oldObjective = scoreboard.getObjective(KILLS_OBJECTIVE_NAME);
         if (oldObjective != null) {
             scoreboard.removeObjective(oldObjective);
         }
 
-        // 使用標準的擊殺計數類型
-        // 舊寫法
-        // ObjectiveCriteria criteria = ObjectiveCriteria.PLAYER_KILL_COUNT;
-        // 新寫法
-        ObjectiveCriteria criteria = ObjectiveCriteria.byName("playerKillCount").orElseThrow();
+        // 修正：使用 1.20.1 相容的方式取得擊殺計數標準
+        ObjectiveCriteria criteria = ObjectiveCriteria.byName("playerKillCount").orElse(ObjectiveCriteria.DUMMY);
         Component displayName = Component.literal("殺敵數").withStyle(ChatFormatting.RED);
-
-        // 重新建立計分項
         Objective objective = scoreboard.addObjective(KILLS_OBJECTIVE_NAME, criteria, displayName, ObjectiveCriteria.RenderType.INTEGER);
 
-        // 將計分項顯示在 TAB 列表
-        scoreboard.setDisplayObjective(0, objective); // 0=LIST, 1=SIDEBAR, 2=BELOW_NAME
+        // 修正：使用整數 0 來代表 TAB 列表欄位 (DisplaySlot.LIST)
+        scoreboard.setDisplayObjective(0, objective);
+    }
+
+    // 新增：設定隨機序列版本計分板的方法
+    public static void setupRandomVersionObjective(MinecraftServer server) {
+        Scoreboard scoreboard = server.getScoreboard();
+        if (scoreboard.getObjective(RANDOM_VERSION_OBJECTIVE_NAME) == null) {
+            // 修正：為 addObjective 方法提供完整的四個參數
+            scoreboard.addObjective(RANDOM_VERSION_OBJECTIVE_NAME, ObjectiveCriteria.DUMMY, Component.literal("Random Sequence Versions"), ObjectiveCriteria.RenderType.INTEGER);
+        }
     }
 
     private static void createLoneWolfTeam(MinecraftServer server) {
@@ -233,23 +239,23 @@ public class TeamManager {
         }
     }
 
-    // 新增：重置指定玩家們的擊殺數
     public static void resetPlayersKills(MinecraftServer server, Collection<ServerPlayer> players) {
         Scoreboard scoreboard = server.getScoreboard();
         Objective objective = scoreboard.getObjective(KILLS_OBJECTIVE_NAME);
         if (objective != null) {
             for (ServerPlayer player : players) {
+                // 修正：使用 getScoreboardName() 來取得玩家在計分板上的正確名稱
                 scoreboard.resetPlayerScore(player.getScoreboardName(), objective);
             }
         }
     }
 
-    // 新增：重置單一玩家的擊殺數
     public static void resetPlayerKills(ServerPlayer player) {
         if (player.getServer() == null) return;
         Scoreboard scoreboard = player.getServer().getScoreboard();
         Objective objective = scoreboard.getObjective(KILLS_OBJECTIVE_NAME);
         if (objective != null) {
+            // 修正：使用 getScoreboardName() 來取得玩家在計分板上的正確名稱
             scoreboard.resetPlayerScore(player.getScoreboardName(), objective);
         }
     }

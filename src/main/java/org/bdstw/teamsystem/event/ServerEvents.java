@@ -8,6 +8,8 @@ import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.ServerChatEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import org.bdstw.teamsystem.command.RandomCommand;
+import org.bdstw.teamsystem.command.RandomSequenceCommand; // 新增 import
 import org.bdstw.teamsystem.command.TeamAdminCommand;
 import org.bdstw.teamsystem.command.TeamCommand;
 import org.bdstw.teamsystem.team.Team;
@@ -18,17 +20,15 @@ public class ServerEvents {
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent event) {
         TeamCommand.register(event.getDispatcher());
-        // 移除了舊的 RTPCommand 註冊
         TeamAdminCommand.register(event.getDispatcher());
+        RandomCommand.register(event.getDispatcher());
+        RandomSequenceCommand.register(event.getDispatcher()); // 新增指令註冊
     }
 
     @SubscribeEvent
     public void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
-            // 新增：在玩家登入時重置其擊殺計數
             TeamManager.resetPlayerKills(player);
-
-            // 原有邏輯
             Team team = TeamManager.getTeam(player);
             if (team != null) {
                 TeamManager.addPlayerToScoreboardTeam(player, team);
@@ -40,12 +40,7 @@ public class ServerEvents {
 
     @SubscribeEvent
     public void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
-        if (event.getEntity() instanceof ServerPlayer player) {
-            if (TeamManager.isInTeam(player)) {
-                // 這裡可以選擇是否在玩家登出時將其移出隊伍
-                // TeamManager.forceLeaveTeam(player);
-            }
-        }
+        // ...
     }
 
     @SubscribeEvent

@@ -1,11 +1,13 @@
 {
   "commands.bdstw_teamsystem.prefix": "§b[隊伍系統] §r",
-  "commands.bdstw_teamsystem.rtp.fail": "§c找不到安全的傳送地點，請稍後再試！",
-
-  "commands.bdstw_teamsystem.admin.rtp.player.success": "已將玩家 §a%s §r隨機傳送到 §e%d, %d§r。",
-  "commands.bdstw_teamsystem.admin.rtp.team.success": "已將隊伍 §a%s §r的所有成員隨機傳送到 §e%d, %d§r。",
-  "commands.bdstw_teamsystem.admin.rtp.team_empty": "§c隊伍 §e%s §c中沒有任何玩家可傳送。",
   "commands.bdstw_teamsystem.admin.resetkills.success": "已成功重置 §e%s §r位玩家的擊殺計數。",
+
+  "commands.bdstw_teamsystem.random.value.success": "隨機結果為 §a%s§r。",
+  "commands.bdstw_teamsystem.random.roll.broadcast": "%s 擲出了 §a%s§r (%s..%s)",
+  "commands.bdstw_teamsystem.random.reset.success": "已重置隨機序列 §e%s§r。",
+  "commands.bdstw_teamsystem.random.reset.all.success": "已重置所有隨機序列。",
+  "commands.bdstw_teamsystem.random.error.invalid_range": "§c無效的範圍：最小值不可大於最大值。",
+  "commands.bdstw_teamsystem.random.error.range_too_large": "§c請求的範圍過大 (%s > %s)，無法處理。",
 
   "commands.bdstw_teamsystem.error.no_team": "§c你不在任何隊伍中。",
   "commands.bdstw_teamsystem.error.not_leader": "§c你不是隊長，無法執行此操作。",

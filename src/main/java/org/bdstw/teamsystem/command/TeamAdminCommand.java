@@ -1,7 +1,6 @@
 package org.bdstw.teamsystem.command;
 
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -9,21 +8,15 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
-import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import org.bdstw.teamsystem.team.Team;
 import org.bdstw.teamsystem.team.TeamManager;
-import org.bdstw.teamsystem.util.RTPUtil;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-import java.util.stream.Collectors;
 
 public class TeamAdminCommand {
 
@@ -52,20 +45,6 @@ public class TeamAdminCommand {
                 .then(Commands.literal("randomjoin")
                         .then(Commands.argument("players", EntityArgument.players())
                                 .executes(TeamAdminCommand::forceRandomJoin)))
-                .then(Commands.literal("rtp")
-                        .then(Commands.literal("player")
-                                .then(Commands.argument("players", EntityArgument.players())
-                                        .executes(ctx -> executePlayerRtp(ctx, null))
-                                        .then(Commands.argument("max_range", IntegerArgumentType.integer(100))
-                                                .executes(ctx -> executePlayerRtp(ctx, IntegerArgumentType.getInteger(ctx, "max_range"))))))
-                        .then(Commands.literal("team")
-                                .then(Commands.argument("team_name", StringArgumentType.string())
-                                        .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(
-                                                TeamManager.getAllTeams().stream().map(Team::getName).map(name -> "\"" + name + "\""), builder))
-                                        .executes(ctx -> executeTeamRtp(ctx, null))
-                                        .then(Commands.argument("max_range", IntegerArgumentType.integer(100))
-                                                .executes(ctx -> executeTeamRtp(ctx, IntegerArgumentType.getInteger(ctx, "max_range")))))))
-                // 新增：重置擊殺計數的指令
                 .then(Commands.literal("resetkills")
                         .then(Commands.argument("players", EntityArgument.players())
                                 .executes(TeamAdminCommand::resetKills)))
@@ -157,56 +136,6 @@ public class TeamAdminCommand {
         return targets.size();
     }
 
-    private static int executePlayerRtp(CommandContext<CommandSourceStack> context, @Nullable Integer maxRange) throws CommandSyntaxException {
-        Collection<ServerPlayer> players = EntityArgument.getPlayers(context, "players");
-        CommandSourceStack source = context.getSource();
-
-        for (ServerPlayer player : players) {
-            RTPUtil.teleportPlayer(player, maxRange).thenAccept(success -> {
-                if (success) {
-                    BlockPos pos = player.blockPosition();
-                    source.sendSuccess(() -> Component.translatable("commands.bdstw_teamsystem.admin.rtp.player.success", player.getName().getString(), pos.getX(), pos.getZ()), false);
-                } else {
-                    source.sendFailure(Component.translatable("commands.bdstw_teamsystem.rtp.fail"));
-                }
-            });
-        }
-        return players.size();
-    }
-
-    private static int executeTeamRtp(CommandContext<CommandSourceStack> context, @Nullable Integer maxRange) throws CommandSyntaxException {
-        String teamName = StringArgumentType.getString(context, "team_name");
-        Team team = TeamManager.getTeam(teamName);
-        CommandSourceStack source = context.getSource();
-
-        if (team == null) {
-            source.sendFailure(Component.translatable("commands.bdstw_teamsystem.error.team_not_found", teamName));
-            return 0;
-        }
-
-        if (team.getMembers().isEmpty() || (team.getMembers().size() == 1 && team.getMembers().contains(TeamManager.SYSTEM_UUID))) {
-            source.sendFailure(Component.translatable("commands.bdstw_teamsystem.admin.rtp.team_empty", teamName));
-            return 0;
-        }
-
-        ServerLevel level = source.getLevel();
-
-        RTPUtil.findSafeLocation(level, maxRange).thenAccept(safeLocationOpt -> {
-            safeLocationOpt.ifPresentOrElse(pos -> {
-                team.getMembers().stream()
-                        .map(uuid -> source.getServer().getPlayerList().getPlayer(uuid))
-                        .filter(java.util.Objects::nonNull)
-                        .forEach(member -> member.teleportTo(level, pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, member.getYRot(), member.getXRot()));
-                source.sendSuccess(() -> Component.translatable("commands.bdstw_teamsystem.admin.rtp.team.success", team.getName(), pos.getX(), pos.getZ()), true);
-            }, () -> {
-                source.sendFailure(Component.translatable("commands.bdstw_teamsystem.rtp.fail"));
-            });
-        });
-
-        return 1;
-    }
-
-    // 新增：重置擊殺計數的執行方法
     private static int resetKills(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         Collection<ServerPlayer> targets = EntityArgument.getPlayers(context, "players");
         CommandSourceStack source = context.getSource();
