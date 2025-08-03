@@ -26,10 +26,10 @@ public class ServerEvents {
     private final Map<UUID, String> playerTeamTracker = new HashMap<>();
 
     private static final String LONE_WOLF_GROUP_LEAVE_COMMAND = "groups leave (孤狼)";
-    // 修正：將觸發指令的隊伍名稱改為英文
+
     private static final Map<String, String> groupJoinCommands = Map.of(
             "blue", "groups join a100b1ac-cd23-4b75-a7f4-6b625c0215a1 2222",
-            "red", "groups join 9dcf5767-0475-40a7-b001-f1f8052bf22 1111",
+            "red", "groups join 764e1285-9cd1-461a-a8b9-b4c44d7ffcc5",
             "white", "groups join 7f2a76bd-0bc4-4cde-9f71-5de12e24bc60 3333",
             "green", "groups join 60922881-5ced-408b-8876-07e8ac5e2b40 4444"
     );
